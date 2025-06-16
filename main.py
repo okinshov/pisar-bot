@@ -25,6 +25,7 @@ LINKS = {
     "OKX": "[OKX](https://www.okx.com/join/7045895)",
     "MEXC": "[MEXC](https://m.mexc.com/auth/signup?inviteCode=1RSm3)",
     "Phemex": "[Phemex](https://phemex.com/register-vt1?referralCode=EB95B5)",
+    "KuCoin": "[KuCoin](https://www.kucoin.com/ucenter/signup?rcode=rJY7JU5)",
     "Bitget": "[Bitget](https://www.bitget.com/ru/referral/register?clacCode=XQU9UEFN)"
 }
 
