@@ -16,16 +16,29 @@ nest_asyncio.apply()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENROUTER_KEY = os.getenv("OPENROUTER_KEY")
 
-# Ваш FOOTER і LINKS залишаються без змін
-FOOTER = "..."
-LINKS = { ... }
+FOOTER = "🤖 Створено ботом-помічником. Зворотний зв'язок — завжди вітається!"
+
+# Оновлений словник ключових слів
+LINKS = {
+    "Python": "[Python](https://www.python.org/)",
+    "asyncio": "[asyncio](https://docs.python.org/3/library/asyncio.html)",
+    "telegram": "[Telegram Bot API](https://core.telegram.org/bots/api)",
+    "aiohttp": "[aiohttp](https://docs.aiohttp.org/)",
+    # Додай інші ключові слова за потреби
+}
 
 def format_steps(text: str) -> str:
     return re.sub(r'(?<!\d)\b(\d+)\. ', lambda m: f"{m.group(1)}️⃣ ", text)
 
 def replace_keywords(text: str) -> str:
+    if not isinstance(LINKS, dict):
+        logger.error("❗ LINKS повинен бути словником, а не типу %s", type(LINKS).__name__)
+        return text
     for word, link in LINKS.items():
-        text = re.sub(rf"(?i)\b{re.escape(word)}\b", link, text)
+        try:
+            text = re.sub(rf"(?i)\b{re.escape(word)}\b", link, text)
+        except Exception as e:
+            logger.warning("⚠️ Не вдалося замінити слово '%s': %s", word, e)
     return text
 
 async def paraphrase_text(text: str) -> str:
@@ -36,19 +49,20 @@ async def paraphrase_text(text: str) -> str:
             "model": "openai/gpt-3.5-turbo",
             "messages": [{
                 "role": "user",
-                "content": f"... {text}"
+                "content": f"Перефразуй наступний текст, зберігаючи зміст: {text}"
             }]
         }
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, json=data) as response:
                 if response.status != 200:
-                    logger.error(f"OpenRouter API error — статус {response.status}")
+                    error_text = await response.text()
+                    logger.error(f"❌ OpenRouter помилка {response.status}: {error_text}")
                     return "⚠️ Помилка при зверненні до OpenRouter."
                 result = await response.json()
                 return result.get("choices", [{}])[0].get("message", {}).get("content", text)
     except Exception as e:
-        logger.error(f"Парaфразування провалено: {e}")
+        logger.exception("‼️ Парaфразування провалено")
         return "⚠️ Внутрішня помилка. Спробуйте ще раз."
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
@@ -66,16 +80,16 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
 
         await loading_msg.edit_text(f"{final_text}\n\n{FOOTER}", parse_mode="Markdown")
     except Exception as e:
-        logger.error(f"Обробка зірвалась: {e}")
-        await update.message.reply_text("❌ Помилка. Спробуйте пізніше.")
+        logger.exception("🚨 Обробка зірвалась")
+        await update.message.reply_text("❌ Сталася помилка. Перевір логи або спробуй пізніше.")
 
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text("🚀 Готовий обробляти тексти!")
+    await update.message.reply_text("🚀 Я готовий обробляти тексти! Надішли мені повідомлення 📩")
 
 async def reset_webhook():
     bot = Bot(token=BOT_TOKEN)
     await bot.delete_webhook()
-    logger.info("✅ Webhook успішно очищено")
+    logger.info("✅ Webhook очищено")
 
 async def main():
     await reset_webhook()
