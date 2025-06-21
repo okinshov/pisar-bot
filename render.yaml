@@ -1,6 +1,16 @@
 services:
-  - type: worker
-    name: telegram-worker
+  - type: web
+    name: telegram-bot
     env: python
+    region: frankfurt
+    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python bot.py
+    startCommand: python main.py
+    runtime: python
+    pythonVersion: 3.10
+    autoDeploy: true
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: OPENROUTER_KEY
+        sync: false
