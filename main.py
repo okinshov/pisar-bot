@@ -49,10 +49,21 @@ async def paraphrase_text(text: str) -> str:
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers=headers, json=data) as response:
+            response_text = await response.text()
             if response.status != 200:
+                logger.warning(f"OpenRouter error response ({response.status}): {response_text}")
                 return "⚠️ Виникла проблема з обробкою тексту."
-            result = await response.json()
-            return result.get("choices", [{}])[0].get("message", {}).get("content", text)
+            try:
+                result = await response.json()
+                content = result.get("choices", [{}])[0].get("message", {}).get("content")
+                if not content:
+                    logger.warning(f"OpenRouter пустий контент: {response_text}")
+                    return "⚠️ OpenRouter не надіслав відповідь."
+                return content
+            except Exception as e:
+                logger.error(f"Не вдалося розібрати JSON: {e} | Тіло відповіді: {response_text}")
+                return "⚠️ Виникла помилка при обробці відповіді від OpenRouter."
+
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
     user_text = update.message.text
