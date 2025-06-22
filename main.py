@@ -64,7 +64,6 @@ async def paraphrase_text(text: str) -> str:
                 logger.error(f"Не вдалося розібрати JSON: {e} | Тіло відповіді: {response_text}")
                 return "⚠️ Виникла помилка при обробці відповіді від OpenRouter."
 
-
 async def handle_message(update: Update, context: CallbackContext) -> None:
     user_text = update.message.text
     if not user_text:
@@ -104,3 +103,4 @@ if __name__ == "__main__":
 
     loop.create_task(main())
     loop.run_forever()
+
